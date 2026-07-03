@@ -51,6 +51,75 @@ function garmentLathe(points: ProfilePoint[], material: THREE.Material, segments
   return new THREE.Mesh(buildLathe(points, segments), material);
 }
 
+// A flat, tapered triangular flap — the classic folded-down point of a shirt
+// collar. Wide at the standing band, narrowing to a point at the chest.
+function collarPointGeometry(width: number, length: number): THREE.ExtrudeGeometry {
+  const shape = new THREE.Shape();
+  shape.moveTo(-width / 2, 0);
+  shape.lineTo(width / 2, 0);
+  shape.lineTo(0, -length);
+  shape.lineTo(-width / 2, 0);
+  return new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.002, width * 0.05), bevelEnabled: false });
+}
+
+// Per-category collar/neckline. Distinct silhouettes read as different
+// garment types even before color/material differences register.
+function buildCollar(category: GarmentCategory, rig: BodyRig, material: THREE.Material): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'collar';
+  const neckY = rig.shoulderY;
+
+  if (category === 'shirt') {
+    // Standing band plus two folded-down points meeting in a V at the chest.
+    const band = new THREE.Mesh(new THREE.TorusGeometry(rig.neckR * 1.12, rig.neckR * 0.14, 8, 20), material);
+    band.rotation.x = Math.PI / 2;
+    band.position.y = neckY + 0.015;
+    group.add(band);
+
+    const pointGeo = collarPointGeometry(rig.neckR * 0.9, rig.neckR * 1.3);
+    [-1, 1].forEach((side) => {
+      const point = new THREE.Mesh(pointGeo, material);
+      point.position.set(side * rig.neckR * 0.5, neckY - 0.005, rig.neckR * 0.9);
+      point.rotation.x = -Math.PI / 2.3;
+      point.rotation.z = side * -0.3;
+      group.add(point);
+    });
+    return group;
+  }
+
+  if (category === 'hoodie') {
+    // Thicker ribbed band plus two hanging drawstrings — the hood cone
+    // itself is added separately by the caller.
+    const band = new THREE.Mesh(new THREE.TorusGeometry(rig.neckR * 1.18, rig.neckR * 0.3, 10, 20), material);
+    band.rotation.x = Math.PI / 2;
+    band.position.y = neckY + 0.012;
+    group.add(band);
+
+    const stringMaterial = new THREE.MeshStandardMaterial({ color: 0xe6ded2, roughness: 0.85 });
+    const stringLength = rig.neckR * 2.6;
+    const agletGeo = new THREE.SphereGeometry(rig.neckR * 0.09, 8, 8);
+    const cordGeo = new THREE.CylinderGeometry(rig.neckR * 0.05, rig.neckR * 0.05, stringLength, 6);
+    [-1, 1].forEach((side) => {
+      const cord = new THREE.Mesh(cordGeo, stringMaterial);
+      cord.position.set(side * rig.neckR * 0.35, neckY - stringLength * 0.5, rig.neckR * 0.98);
+      cord.rotation.z = side * 0.05;
+      group.add(cord);
+
+      const aglet = new THREE.Mesh(agletGeo, stringMaterial);
+      aglet.position.set(cord.position.x, neckY - stringLength, rig.neckR * 0.98);
+      group.add(aglet);
+    });
+    return group;
+  }
+
+  // Crew neck — t-shirt/default: a small ring close to the body.
+  const crew = new THREE.Mesh(new THREE.TorusGeometry(rig.neckR * 1.05, rig.neckR * 0.18, 8, 20), material);
+  crew.rotation.x = Math.PI / 2;
+  crew.position.y = neckY + 0.01;
+  group.add(crew);
+  return group;
+}
+
 export function buildTopGarment(rig: BodyRig, body: BodyMeasurements, garment: Garment): GarmentBuildResult {
   if (!garment.top) throw new Error('Garment has no top measurements');
   const { top } = garment;
@@ -100,11 +169,7 @@ export function buildTopGarment(rig: BodyRig, body: BodyMeasurements, garment: G
   });
   group.add(bodyMesh);
 
-  // collar ring
-  const collar = new THREE.Mesh(new THREE.TorusGeometry(rig.neckR * 1.05, rig.neckR * 0.18, 8, 20), material);
-  collar.rotation.x = Math.PI / 2;
-  collar.position.y = rig.shoulderY + 0.01;
-  group.add(collar);
+  group.add(buildCollar(garment.category, rig, material));
 
   // sleeves — a single lathe from shoulder to cuff instead of a plain capsule
   const sleeveLengthM = Math.max(0.05, top.sleeveCm / 100);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, useWindowDimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -9,7 +9,7 @@ import { Card } from '../components/Card';
 import { MeasurementField } from '../components/MeasurementField';
 import { useBodyStore } from '../store/useBodyStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { detectPoseFromImageUri } from '../lib/poseEstimation';
+import { detectPoseFromImageUri, warmUpPoseModel } from '../lib/poseEstimation';
 import { estimateMeasurementsFromKeypoints, EstimationResult } from '../lib/anthropometry';
 import { persistPickedImage, deletePersistedImage } from '../lib/imageUtils';
 import { BODY_MEASUREMENT_FIELDS, BodyMeasurements } from '../types/measurements';
@@ -36,6 +36,13 @@ export function PhotoMeasurementScreen({ navigation }: Props) {
   const [estimation, setEstimation] = useState<EstimationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Kick off MoveNet's load as soon as this screen opens so the cold-start
+  // cost overlaps with the user framing/taking their photo instead of
+  // blocking after they tap "estimate".
+  useEffect(() => {
+    warmUpPoseModel();
+  }, []);
 
   const displayWidth = windowWidth - spacing(4);
   const displayHeight = photo ? (displayWidth * photo.height) / photo.width : 0;
