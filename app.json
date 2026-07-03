@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "fitting-app",
-    "slug": "fitting-app",
+    "name": "Drape",
+    "slug": "drape",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,6 +20,28 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Drape, vücut ölçüsü çıkarma ve AR önizleme için kameranı kullanmak istiyor."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Drape, fotoğraflarından ölçü çıkarmak ve kıyafet görseli eklemek için galerine erişmek istiyor.",
+          "cameraPermission": "Drape, fotoğraf çekmek için kameranı kullanmak istiyor."
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Drape, AR önizlemesinde modeli sabitlemek için cihaz hareketini kullanmak istiyor."
+        }
+      ]
+    ]
   }
 }
