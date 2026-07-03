@@ -19,6 +19,7 @@ export function AIPreviewScreen({ navigation }: Props) {
   const setPhotos = useBodyStore((s) => s.setPhotos);
   const garments = useWardrobeStore((s) => s.garments);
   const selectedId = useWardrobeStore((s) => s.selectedGarmentId);
+  const aiProvider = useSettingsStore((s) => s.aiProvider);
   const aiEndpointUrl = useSettingsStore((s) => s.aiEndpointUrl);
   const aiApiToken = useSettingsStore((s) => s.aiApiToken);
 
@@ -40,7 +41,7 @@ export function AIPreviewScreen({ navigation }: Props) {
     }
   };
 
-  const configured = !!aiEndpointUrl;
+  const configured = aiProvider === 'hf-space' || !!aiEndpointUrl;
 
   const generate = async () => {
     if (!personUri || !selectedGarment?.imageUri) return;
@@ -49,10 +50,12 @@ export function AIPreviewScreen({ navigation }: Props) {
     setResultUri(null);
     try {
       const dataUri = await requestVirtualTryOn({
+        provider: aiProvider,
         endpointUrl: aiEndpointUrl,
         apiToken: aiApiToken || null,
         personImageUri: personUri,
         garmentImageUri: selectedGarment.imageUri,
+        garmentCategory: selectedGarment.category,
       });
       setResultUri(dataUri);
     } catch (e: any) {
@@ -80,7 +83,11 @@ export function AIPreviewScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing(2) }}>
       <Text style={styles.title}>AI fotogerçekçi önizleme</Text>
-      <Text style={styles.body}>Deneysel özellik: sonuç, ayarladığın servisin kalitesine bağlıdır.</Text>
+      <Text style={styles.body}>
+        {aiProvider === 'hf-space'
+          ? 'Deneysel özellik: ücretsiz, paylaşılan bir Hugging Face demosu kullanılıyor. Yoğunluğa göre yavaş olabilir veya günlük kota dolduğunda geçici olarak çalışmayabilir.'
+          : 'Deneysel özellik: sonuç, ayarladığın servisin kalitesine bağlıdır.'}
+      </Text>
 
       <Card style={{ marginBottom: spacing(2) }}>
         <Text style={styles.cardTitle}>1. Fotoğrafın</Text>

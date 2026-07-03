@@ -13,6 +13,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 export function SettingsScreen({}: Props) {
   const unit = useSettingsStore((s) => s.unit);
   const setUnit = useSettingsStore((s) => s.setUnit);
+  const aiProvider = useSettingsStore((s) => s.aiProvider);
+  const setAiProvider = useSettingsStore((s) => s.setAiProvider);
   const aiEndpointUrl = useSettingsStore((s) => s.aiEndpointUrl);
   const setAiEndpointUrl = useSettingsStore((s) => s.setAiEndpointUrl);
   const aiApiToken = useSettingsStore((s) => s.aiApiToken);
@@ -37,36 +39,80 @@ export function SettingsScreen({}: Props) {
       <Card style={{ marginBottom: spacing(2) }}>
         <Text style={styles.cardTitle}>AI fotogerçekçi önizleme</Text>
         <Text style={styles.body}>
-          Bu özellik opsiyoneldir ve API key gerektirmeden çalışmaz. Kendi Replicate / Hugging Face Inference
-          Endpoint / benzeri bir sanal deneme (virtual try-on) servisin varsa, adresini ve varsa token'ını buraya
-          gir. Boş bırakırsan AI önizleme sekmesi devre dışı kalır; 3D avatar ve AR modları API gerektirmeden
-          çalışmaya devam eder.
+          3D avatar ve AR modları bu ayardan bağımsız, API gerektirmeden her zaman çalışır. Bu sadece fotogerçekçi
+          önizleme içindir.
         </Text>
-        <Text style={styles.label}>Endpoint URL</Text>
-        <TextInput
-          style={styles.input}
-          value={endpointDraft}
-          onChangeText={setEndpointDraft}
-          onEndEditing={() => setAiEndpointUrl(endpointDraft.trim())}
-          onBlur={() => setAiEndpointUrl(endpointDraft.trim())}
-          placeholder="https://..."
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <Text style={styles.label}>API Token (opsiyonel)</Text>
-        <TextInput
-          style={styles.input}
-          value={tokenDraft}
-          onChangeText={setTokenDraft}
-          onEndEditing={() => setAiApiToken(tokenDraft.trim())}
-          onBlur={() => setAiApiToken(tokenDraft.trim())}
-          placeholder="hf_... veya r8_..."
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-          autoCorrect={false}
-          secureTextEntry
-        />
+        <View style={styles.rowBtns}>
+          <Button
+            title="Ücretsiz demo"
+            variant={aiProvider === 'hf-space' ? 'primary' : 'secondary'}
+            onPress={() => setAiProvider('hf-space')}
+            style={{ flex: 1 }}
+          />
+          <Button
+            title="Kendi servisim"
+            variant={aiProvider === 'custom' ? 'primary' : 'secondary'}
+            onPress={() => setAiProvider('custom')}
+            style={{ flex: 1 }}
+          />
+        </View>
+
+        {aiProvider === 'hf-space' ? (
+          <>
+            <Text style={[styles.body, { marginTop: 12 }]}>
+              Ekstra kurulum gerekmez — herkese açık, ücretsiz bir Hugging Face demosu (IDM-VTON) kullanılır.
+              Paylaşılan günlük kotaya bağlı olduğu için yoğun saatlerde yavaş olabilir veya kota dolduğunda geçici
+              olarak çalışmayabilir. Kendi Hugging Face token'ını girersen (huggingface.co/settings/tokens) günlük
+              kotan artar; boş bırakabilirsin.
+            </Text>
+            <Text style={styles.label}>Hugging Face Token (opsiyonel)</Text>
+            <TextInput
+              style={styles.input}
+              value={tokenDraft}
+              onChangeText={setTokenDraft}
+              onEndEditing={() => setAiApiToken(tokenDraft.trim())}
+              onBlur={() => setAiApiToken(tokenDraft.trim())}
+              placeholder="hf_..."
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry
+            />
+          </>
+        ) : (
+          <>
+            <Text style={[styles.body, { marginTop: 12 }]}>
+              Kendi Replicate / Hugging Face Inference Endpoint / benzeri bir sanal deneme (virtual try-on)
+              servisin varsa, adresini ve varsa token'ını buraya gir. Boş bırakırsan AI önizleme sekmesi devre
+              dışı kalır.
+            </Text>
+            <Text style={styles.label}>Endpoint URL</Text>
+            <TextInput
+              style={styles.input}
+              value={endpointDraft}
+              onChangeText={setEndpointDraft}
+              onEndEditing={() => setAiEndpointUrl(endpointDraft.trim())}
+              onBlur={() => setAiEndpointUrl(endpointDraft.trim())}
+              placeholder="https://..."
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Text style={styles.label}>API Token (opsiyonel)</Text>
+            <TextInput
+              style={styles.input}
+              value={tokenDraft}
+              onChangeText={setTokenDraft}
+              onEndEditing={() => setAiApiToken(tokenDraft.trim())}
+              onBlur={() => setAiApiToken(tokenDraft.trim())}
+              placeholder="hf_... veya r8_..."
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry
+            />
+          </>
+        )}
       </Card>
 
       <Card>
